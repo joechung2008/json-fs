@@ -71,7 +71,7 @@ This will reformat all `.fs` and `.fsx` files in the current directory and subdi
 
 ## Running the CLI
 
-The CLI is a JSON pretty-printer that reads JSON from standard input and outputs formatted JSON to standard output.
+The CLI is a JSON parser that reads JSON from standard input and outputs the parse tree object model to standard output.
 
 ### Prerequisites
 
@@ -113,12 +113,16 @@ echo '{"name": "example", "value": 123}' | dotnet run --project CLI/CLI.fsproj
 
 ```bash
 $ echo '{"key":"value","array":[1,2,3]}' | dotnet run --project CLI/CLI.fsproj
-{
-  "key": "value",
-  "array": [
-    1,
-    2,
-    3
-  ]
-}
+ObjectToken:
+  Key:
+    StringToken: "key"
+  Value:
+    StringToken: "value"
+  Key:
+    StringToken: "array"
+  Value:
+    ArrayToken:
+      NumberToken: 1
+      NumberToken: 2
+      NumberToken: 3
 ```
