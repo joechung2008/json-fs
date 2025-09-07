@@ -1,43 +1,27 @@
 ﻿open System
 open Shared
 
-let rec prettyPrint (token: Token) (indent: int) : string =
+let rec printObjectModel (token: Token) (indent: int) : unit =
     let indentStr = String.replicate indent "  "
 
     match token with
     | ArrayToken(_, elements) ->
-        let elementIndent = String.replicate (indent + 1) "  "
-
-        let elementsStr =
-            elements
-            |> List.map (fun t -> prettyPrint t (indent + 1))
-            |> List.map (fun s ->
-                s.Split('\n')
-                |> Array.map (fun line -> elementIndent + line)
-                |> String.concat "\n")
-            |> String.concat ",\n"
-
-        sprintf "%s[\n%s\n%s]" (if indent > 0 then "" else indentStr) elementsStr indentStr
+        printfn "%sArrayToken:" indentStr
+        elements |> List.iter (fun t -> printObjectModel t (indent + 1))
     | ObjectToken(_, members) ->
-        let membersStr =
-            members
-            |> List.mapi (fun i p ->
-                match p.key with
-                | StringToken(_, keyValue) ->
-                    sprintf
-                        "%s\"%s\": %s"
-                        (String.replicate (indent + 1) "  ")
-                        keyValue
-                        (prettyPrint p.value (indent + 1))
-                | _ -> "<unknown key>")
-            |> String.concat ",\n"
+        printfn "%sObjectToken:" indentStr
 
-        sprintf "%s{\n%s\n%s}" (if indent > 0 then "" else indentStr) membersStr indentStr
-    | StringToken(_, value) -> sprintf "\"%s\"" value
-    | NumberToken(_, _, valueAsString) -> valueAsString
-    | TrueToken(_) -> "true"
-    | FalseToken(_) -> "false"
-    | NullToken(_) -> "null"
+        members
+        |> List.iter (fun p ->
+            printfn "%s  Key:" indentStr
+            printObjectModel p.key (indent + 2)
+            printfn "%s  Value:" indentStr
+            printObjectModel p.value (indent + 2))
+    | StringToken(_, value) -> printfn "%sStringToken: \"%s\"" indentStr value
+    | NumberToken(_, _, valueAsString) -> printfn "%sNumberToken: %s" indentStr valueAsString
+    | TrueToken(_) -> printfn "%sTrueToken" indentStr
+    | FalseToken(_) -> printfn "%sFalseToken" indentStr
+    | NullToken(_) -> printfn "%sNullToken" indentStr
 
 [<EntryPoint>]
 let main argv =
@@ -45,7 +29,7 @@ let main argv =
 
     match JSONParser.Parse(input) with
     | Ok token ->
-        printfn "%s" (prettyPrint token 0)
+        printObjectModel token 0
         0
     | Error msg ->
         printfn "Error: %s" msg
