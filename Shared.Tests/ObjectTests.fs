@@ -6,68 +6,94 @@ open Shared
 
 [<Fact>]
 let ``Parse empty object`` () =
-    let token = JSONParser.Parse("{}")
-    Assert.IsType<ObjectToken>(token) |> ignore
-    let objectToken = token :?> ObjectToken
-    let membersList = Seq.toList objectToken.members
-    Assert.Equal(0, membersList.Length)
+    match JSONParser.Parse("{}") with
+    | Ok (ObjectToken(_, members)) ->
+        Assert.Equal(0, List.length members)
+    | _ -> Assert.Fail("Expected Ok ObjectToken")
 
 [<Fact>]
 let ``Parse object with single pair`` () =
-    let token = JSONParser.Parse("""{"key": "value"}""")
-    Assert.IsType<ObjectToken>(token) |> ignore
-    let objectToken = token :?> ObjectToken
-    let membersList = Seq.toList objectToken.members
-    Assert.Equal(1, membersList.Length)
-    Assert.Equal("key", membersList.[0].key.value)
-    Assert.IsType<StringToken>(membersList.[0].value) |> ignore
+    match JSONParser.Parse("""{"key": "value"}""") with
+    | Ok (ObjectToken(_, members)) ->
+        Assert.Equal(1, List.length members)
+        match members with
+        | [pair] ->
+            match pair.key with
+            | StringToken(_, keyValue) -> Assert.Equal("key", keyValue)
+            | _ -> Assert.Fail("Expected StringToken for key")
+            match pair.value with
+            | StringToken(_, valueValue) -> Assert.Equal("value", valueValue)
+            | _ -> Assert.Fail("Expected StringToken for value")
+        | _ -> Assert.Fail("Expected one pair")
+    | _ -> Assert.Fail("Expected Ok ObjectToken")
 
 [<Fact>]
 let ``Parse object with multiple pairs`` () =
-    let token = JSONParser.Parse("""{"name": "John", "age": 30}""")
-    Assert.IsType<ObjectToken>(token) |> ignore
-    let objectToken = token :?> ObjectToken
-    let membersList = Seq.toList objectToken.members
-    Assert.Equal(2, membersList.Length)
-    Assert.Equal("name", membersList.[0].key.value)
-    Assert.Equal("age", membersList.[1].key.value)
+    match JSONParser.Parse("""{"name": "John", "age": 30}""") with
+    | Ok (ObjectToken(_, members)) ->
+        Assert.Equal(2, List.length members)
+        match members with
+        | [pair1; pair2] ->
+            match pair1.key with
+            | StringToken(_, keyValue) -> Assert.Equal("name", keyValue)
+            | _ -> Assert.Fail("Expected StringToken for key")
+            match pair2.key with
+            | StringToken(_, keyValue) -> Assert.Equal("age", keyValue)
+            | _ -> Assert.Fail("Expected StringToken for key")
+        | _ -> Assert.Fail("Expected two pairs")
+    | _ -> Assert.Fail("Expected Ok ObjectToken")
 
 [<Fact>]
 let ``Parse nested objects`` () =
-    let token = JSONParser.Parse("""{"person": {"name": "Jane", "age": 25}}""")
-    Assert.IsType<ObjectToken>(token) |> ignore
-    let objectToken = token :?> ObjectToken
-    let membersList = Seq.toList objectToken.members
-    Assert.Equal(1, membersList.Length)
-    Assert.IsType<ObjectToken>(membersList.[0].value) |> ignore
+    match JSONParser.Parse("""{"person": {"name": "Jane", "age": 25}}""") with
+    | Ok (ObjectToken(_, members)) ->
+        Assert.Equal(1, List.length members)
+        match members with
+        | [pair] ->
+            match pair.value with
+            | ObjectToken(_, _) -> ()
+            | _ -> Assert.Fail("Expected ObjectToken for value")
+        | _ -> Assert.Fail("Expected one pair")
+    | _ -> Assert.Fail("Expected Ok ObjectToken")
 
 [<Fact>]
 let ``Parse object with array value`` () =
-    let token = JSONParser.Parse("""{"numbers": [1, 2, 3]}""")
-    Assert.IsType<ObjectToken>(token) |> ignore
-    let objectToken = token :?> ObjectToken
-    let membersList = Seq.toList objectToken.members
-    Assert.Equal(1, membersList.Length)
-    Assert.IsType<ArrayToken>(membersList.[0].value) |> ignore
+    match JSONParser.Parse("""{"numbers": [1, 2, 3]}""") with
+    | Ok (ObjectToken(_, members)) ->
+        Assert.Equal(1, List.length members)
+        match members with
+        | [pair] ->
+            match pair.value with
+            | ArrayToken(_, _) -> ()
+            | _ -> Assert.Fail("Expected ArrayToken for value")
+        | _ -> Assert.Fail("Expected one pair")
+    | _ -> Assert.Fail("Expected Ok ObjectToken")
 
 [<Fact>]
 let ``Parse object with mixed value types`` () =
-    let token =
-        JSONParser.Parse("""{"string": "hello", "number": 42, "boolean": true, "null": null}""")
-
-    Assert.IsType<ObjectToken>(token) |> ignore
-    let objectToken = token :?> ObjectToken
-    let membersList = Seq.toList objectToken.members
-    Assert.Equal(4, membersList.Length)
-    Assert.IsType<StringToken>(membersList.[0].value) |> ignore
-    Assert.IsType<NumberToken>(membersList.[1].value) |> ignore
-    Assert.IsType<TrueToken>(membersList.[2].value) |> ignore
-    Assert.IsType<NullToken>(membersList.[3].value) |> ignore
+    match JSONParser.Parse("""{"string": "hello", "number": 42, "boolean": true, "null": null}""") with
+    | Ok (ObjectToken(_, members)) ->
+        Assert.Equal(4, List.length members)
+        match members with
+        | [pair1; pair2; pair3; pair4] ->
+            match pair1.value with
+            | StringToken(_, _) -> ()
+            | _ -> Assert.Fail("Expected StringToken")
+            match pair2.value with
+            | NumberToken(_, _, _) -> ()
+            | _ -> Assert.Fail("Expected NumberToken")
+            match pair3.value with
+            | TrueToken(_) -> ()
+            | _ -> Assert.Fail("Expected TrueToken")
+            match pair4.value with
+            | NullToken(_) -> ()
+            | _ -> Assert.Fail("Expected NullToken")
+        | _ -> Assert.Fail("Expected four pairs")
+    | _ -> Assert.Fail("Expected Ok ObjectToken")
 
 [<Fact>]
 let ``Parse object with whitespace`` () =
-    let token = JSONParser.Parse("  {  \"key\"  :  \"value\"  }  ")
-    Assert.IsType<ObjectToken>(token) |> ignore
-    let objectToken = token :?> ObjectToken
-    let membersList = Seq.toList objectToken.members
-    Assert.Equal(1, membersList.Length)
+    match JSONParser.Parse("  {  \"key\"  :  \"value\"  }  ") with
+    | Ok (ObjectToken(_, members)) ->
+        Assert.Equal(1, List.length members)
+    | _ -> Assert.Fail("Expected Ok ObjectToken")
