@@ -24,7 +24,11 @@ let rec prettyPrint (token: Token) (indent: int) : string =
             |> List.mapi (fun i p ->
                 match p.key with
                 | StringToken(_, keyValue) ->
-                    sprintf "%s\"%s\": %s" (String.replicate (indent + 1) "  ") keyValue (prettyPrint p.value (indent + 1))
+                    sprintf
+                        "%s\"%s\": %s"
+                        (String.replicate (indent + 1) "  ")
+                        keyValue
+                        (prettyPrint p.value (indent + 1))
                 | _ -> "<unknown key>")
             |> String.concat ",\n"
 
@@ -38,6 +42,7 @@ let rec prettyPrint (token: Token) (indent: int) : string =
 [<EntryPoint>]
 let main argv =
     let input = Console.In.ReadToEnd()
+
     match JSONParser.Parse(input) with
     | Ok token ->
         printfn "%s" (prettyPrint token 0)

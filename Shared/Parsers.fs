@@ -14,7 +14,8 @@ type ArrayParserMode =
 and ArrayParser =
     static member private DELIMITERS = new Regex("[ \\n\\r\\t\\],]")
 
-    static member private getSkip = function
+    static member private getSkip =
+        function
         | ArrayToken(s, _) -> s
         | FalseToken(s) -> s
         | NullToken(s) -> s
@@ -26,9 +27,10 @@ and ArrayParser =
     static member Parse(s: string) : Result<Token, string> =
         let rec parse mode pos elements =
             if pos >= s.Length || mode = ArrayParserMode.End then
-                Ok (ArrayToken(pos, List.rev elements))
+                Ok(ArrayToken(pos, List.rev elements))
             else
                 let ch = s.[pos]
+
                 match mode with
                 | ArrayParserMode.Scanning ->
                     if Char.IsWhiteSpace(ch) then
@@ -47,8 +49,10 @@ and ArrayParser =
                             parse ArrayParserMode.End (pos + 1) elements
                     else
                         let slice = s.Substring(pos)
+
                         match ValueParser.Parse(slice, Some ArrayParser.DELIMITERS) with
-                        | Ok element -> parse ArrayParserMode.Delimiter (pos + ArrayParser.getSkip element) (element :: elements)
+                        | Ok element ->
+                            parse ArrayParserMode.Delimiter (pos + ArrayParser.getSkip element) (element :: elements)
                         | Error e -> Error e
                 | ArrayParserMode.Delimiter ->
                     if Char.IsWhiteSpace(ch) then
@@ -60,6 +64,7 @@ and ArrayParser =
                     else
                         Error $"Expected ',' or ']', actual '{ch}'"
                 | ArrayParserMode.End -> parse mode pos elements
+
         parse ArrayParserMode.Scanning 0 []
 
 and JSONParser =
@@ -87,15 +92,16 @@ and NumberParser =
                 match mode with
                 | NumberParserMode.Characteristic
                 | NumberParserMode.ExponentSign
-                | NumberParserMode.ExponentFirstDigit ->
-                    Error $"Incomplete expression, mode {mode}"
+                | NumberParserMode.ExponentFirstDigit -> Error $"Incomplete expression, mode {mode}"
                 | _ ->
                     try
                         let value = Double.Parse(valueAsString)
-                        Ok (NumberToken(pos, value, valueAsString))
-                    with _ -> Error "Invalid number format"
+                        Ok(NumberToken(pos, value, valueAsString))
+                    with _ ->
+                        Error "Invalid number format"
             else
                 let ch = s.[pos]
+
                 match mode with
                 | NumberParserMode.Scanning ->
                     if Char.IsWhiteSpace(ch) then
@@ -153,6 +159,7 @@ and NumberParser =
                     else
                         Error $"Expected digit, actual '{ch}'"
                 | NumberParserMode.End -> parse mode pos valueAsString
+
         parse NumberParserMode.Scanning 0 ""
 
 and ObjectParserMode =
@@ -167,9 +174,10 @@ and ObjectParser =
     static member Parse(s: string) : Result<Token, string> =
         let rec parse mode pos members =
             if pos >= s.Length || mode = ObjectParserMode.End then
-                Ok (ObjectToken(pos, List.rev members))
+                Ok(ObjectToken(pos, List.rev members))
             else
                 let ch = s.[pos]
+
                 match mode with
                 | ObjectParserMode.Scanning ->
                     if Char.IsWhiteSpace(ch) then
@@ -188,6 +196,7 @@ and ObjectParser =
                             parse ObjectParserMode.End (pos + 1) members
                     else
                         let slice = s.Substring(pos)
+
                         match PairParser.Parse(slice) with
                         | Ok pair -> parse ObjectParserMode.Delimiter (pos + pair.skip) (pair :: members)
                         | Error e -> Error e
@@ -201,6 +210,7 @@ and ObjectParser =
                     else
                         Error $"Expected ',' or '}}', actual '{ch}'"
                 | ObjectParserMode.End -> parse mode pos members
+
         parse ObjectParserMode.Scanning 0 []
 
 and PairParserMode =
@@ -213,7 +223,8 @@ and PairParserMode =
 and PairParser =
     static member private DELIMITERS = new Regex("[ \\n\\r\\t\\},]")
 
-    static member private getSkip = function
+    static member private getSkip =
+        function
         | ArrayToken(s, _) -> s
         | FalseToken(s) -> s
         | NullToken(s) -> s
@@ -228,6 +239,7 @@ and PairParser =
                 Ok { skip = pos; key = key; value = value }
             else
                 let ch = s.[pos]
+
                 match mode with
                 | PairParserMode.Scanning ->
                     if Char.IsWhiteSpace(ch) then
@@ -236,6 +248,7 @@ and PairParser =
                         parse PairParserMode.Key pos key value
                 | PairParserMode.Key ->
                     let slice = s.Substring(pos)
+
                     match StringParser.Parse(slice) with
                     | Ok k -> parse PairParserMode.Delimiter (pos + PairParser.getSkip k) k value
                     | Error e -> Error e
@@ -248,10 +261,12 @@ and PairParser =
                         Error $"Expected ':', actual '{ch}'"
                 | PairParserMode.Value ->
                     let slice = s.Substring(pos)
+
                     match ValueParser.Parse(slice, Some PairParser.DELIMITERS) with
                     | Ok v -> parse PairParserMode.End (pos + PairParser.getSkip v) key v
                     | Error e -> Error e
                 | PairParserMode.End -> parse mode pos key value
+
         parse PairParserMode.Scanning 0 Unchecked.defaultof<Token> Unchecked.defaultof<Token>
 
 and StringParserMode =
@@ -265,9 +280,10 @@ and StringParser =
     static member Parse(s: string) : Result<Token, string> =
         let rec parse mode pos value =
             if pos >= s.Length || mode = StringParserMode.End then
-                Ok (StringToken(pos, value))
+                Ok(StringToken(pos, value))
             else
                 let ch = s.[pos]
+
                 match mode with
                 | StringParserMode.Scanning ->
                     if Char.IsWhiteSpace(ch) then
@@ -304,6 +320,7 @@ and StringParser =
                         Error $"Unexpected escape character '{ch}'"
                 | StringParserMode.Unicode ->
                     let slice = s.Substring(pos, 4)
+
                     if slice.Length < 4 then
                         Error $"Incomplete Unicode code '{slice}'"
                     else
@@ -311,8 +328,10 @@ and StringParser =
                             let hex = Int32.Parse(slice, NumberStyles.HexNumber)
                             let char = Convert.ToChar(hex).ToString()
                             parse StringParserMode.Char (pos + 4) (value + char)
-                        with _ -> Error "Invalid Unicode code"
+                        with _ ->
+                            Error "Invalid Unicode code"
                 | StringParserMode.End -> parse mode pos value
+
         parse StringParserMode.Scanning 0 ""
 
 and ValueParserMode =
@@ -327,7 +346,8 @@ and ValueParserMode =
     | End
 
 and ValueParser =
-    static member private getSkip = function
+    static member private getSkip =
+        function
         | ArrayToken(s, _) -> s
         | FalseToken(s) -> s
         | NullToken(s) -> s
@@ -342,46 +362,66 @@ and ValueParser =
                 Error "Unexpected end of input"
             else
                 let ch = s.[pos]
+
                 match mode with
                 | ValueParserMode.Scanning ->
                     if Char.IsWhiteSpace(ch) then
                         parse mode (pos + 1)
                     elif ch = '[' then
                         let slice = s.Substring(pos)
+
                         match ArrayParser.Parse(slice) with
-                        | Ok (ArrayToken(s, e)) -> Ok (ArrayToken(s + pos, e))
+                        | Ok token ->
+                            match token with
+                            | ArrayToken(s, e) -> Ok(ArrayToken(s + pos, e))
+                            | _ -> Error "Unexpected token type from ArrayParser"
                         | Error e -> Error e
                     elif ch = 'f' then
                         let slice = s.Substring(pos, 5)
+
                         if slice = "false" then
-                            Ok (FalseToken(pos + 5))
+                            Ok(FalseToken(pos + 5))
                         else
                             Error $"Expected 'false', actual '{slice}'"
                     elif ch = 'n' then
                         let slice = s.Substring(pos, 4)
+
                         if slice = "null" then
-                            Ok (NullToken(pos + 4))
+                            Ok(NullToken(pos + 4))
                         else
                             Error $"Expected 'null', actual '{slice}'"
                     elif Char.IsDigit(ch) || ch = '-' then
                         let slice = s.Substring(pos)
+
                         match NumberParser.Parse(slice, delimiters) with
-                        | Ok (NumberToken(s, v, vas)) -> Ok (NumberToken(s + pos, v, vas))
+                        | Ok token ->
+                            match token with
+                            | NumberToken(s, v, vas) -> Ok(NumberToken(s + pos, v, vas))
+                            | _ -> Error "Unexpected token type from NumberParser"
                         | Error e -> Error e
                     elif ch = '{' then
                         let slice = s.Substring(pos)
+
                         match ObjectParser.Parse(slice) with
-                        | Ok (ObjectToken(s, m)) -> Ok (ObjectToken(s + pos, m))
+                        | Ok token ->
+                            match token with
+                            | ObjectToken(s, m) -> Ok(ObjectToken(s + pos, m))
+                            | _ -> Error "Unexpected token type from ObjectParser"
                         | Error e -> Error e
                     elif ch = '"' then
                         let slice = s.Substring(pos)
+
                         match StringParser.Parse(slice) with
-                        | Ok (StringToken(s, v)) -> Ok (StringToken(s + pos, v))
+                        | Ok token ->
+                            match token with
+                            | StringToken(s, v) -> Ok(StringToken(s + pos, v))
+                            | _ -> Error "Unexpected token type from StringParser"
                         | Error e -> Error e
                     elif ch = 't' then
                         let slice = s.Substring(pos, 4)
+
                         if slice = "true" then
-                            Ok (TrueToken(pos + 4))
+                            Ok(TrueToken(pos + 4))
                         else
                             Error $"Expected 'true', actual '{slice}'"
                     elif delimiters.IsSome && delimiters.Value.IsMatch(ch.ToString()) then
@@ -389,4 +429,5 @@ and ValueParser =
                     else
                         Error $"Unexpected character '{ch}'"
                 | _ -> Error $"Unexpected mode {mode}"
+
         parse ValueParserMode.Scanning 0
