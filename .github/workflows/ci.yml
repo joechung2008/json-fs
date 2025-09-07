@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ["8.0.x"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use .NET ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Restore dependencies
+        run: dotnet restore json-fs.sln
+
+      - name: Build
+        run: dotnet build json-fs.sln --configuration Release --no-restore
+
+      - name: Test with coverage
+        run: dotnet test Shared.Tests/Shared.Tests.fsproj --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-net-${{ matrix.dotnet-version }}
+          path: coverage
+          if-no-files-found: ignore
