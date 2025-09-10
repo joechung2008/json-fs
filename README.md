@@ -71,7 +71,7 @@ This will reformat all `.fs` and `.fsx` files in the current directory and subdi
 
 ## Running the CLI
 
-The CLI is a JSON parser that reads JSON from standard input and outputs the parse tree object model to standard output.
+The CLI is a JSON parser that reads JSON from standard input and outputs the parsed JSON to standard output.
 
 ### Prerequisites
 
@@ -113,16 +113,75 @@ echo '{"name": "example", "value": 123}' | dotnet run --project CLI/CLI.fsproj
 
 ```bash
 $ echo '{"key":"value","array":[1,2,3]}' | dotnet run --project CLI/CLI.fsproj
-ObjectToken:
-  Key:
-    StringToken: "key"
-  Value:
-    StringToken: "value"
-  Key:
-    StringToken: "array"
-  Value:
-    ArrayToken:
-      NumberToken: 1
-      NumberToken: 2
-      NumberToken: 3
+{"key":"value","array":[1,2,3]}
+```
+
+## Running the API
+
+The API provides a RESTful web service for JSON parsing with OpenAPI/Swagger documentation.
+
+### Prerequisites
+
+- .NET 8.0 SDK (or later)
+
+### Starting the API Server
+
+Run the API server:
+
+```bash
+dotnet run --project API/API.fsproj
+```
+
+The server will start and listen on `http://localhost:8000` (HTTP) and `https://localhost:8001` (HTTPS).
+
+### Accessing Swagger UI
+
+Once the server is running, you can access the interactive API documentation:
+
+- **Swagger UI**: http://localhost:8000/swagger
+- **OpenAPI 3.0 JSON**: http://localhost:8000/swagger/v3/swagger.json
+- **Swagger 2.0 JSON**: http://localhost:8000/swagger/v2/swagger.json
+
+### API Endpoint
+
+The API exposes a single endpoint for JSON parsing:
+
+- **URL**: `POST /api/v1/parse`
+- **Content-Type**: `text/plain`
+- **Body**: JSON text to parse
+- **Response**: Parsed JSON structure or error message
+
+### Testing with REST Client Extension
+
+You can test the API using the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) VS Code extension.
+
+### Example API Response
+
+**Request:**
+
+```http
+POST http://localhost:8000/api/v1/parse
+Content-Type: text/plain
+
+{"message": "Hello World", "count": 42}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Hello World",
+  "count": 42
+}
+```
+
+### Error Response Format
+
+When parsing fails, the API returns an error response with an HTTP status code:
+
+```json
+{
+  "error": "Error message describing what went wrong",
+  "code": 400
+}
 ```

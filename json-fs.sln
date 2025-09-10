@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Shared", "Shared\Shared.fsp
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Shared.Tests", "Shared.Tests\Shared.Tests.fsproj", "{3A2A494C-AE7B-4251-BC89-83D1BE443B1E}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "API", "API\API.fsproj", "{5F236472-EC0B-4E2C-86A4-E0B1B4F7257B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{3A2A494C-AE7B-4251-BC89-83D1BE443B1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A2A494C-AE7B-4251-BC89-83D1BE443B1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A2A494C-AE7B-4251-BC89-83D1BE443B1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F236472-EC0B-4E2C-86A4-E0B1B4F7257B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F236472-EC0B-4E2C-86A4-E0B1B4F7257B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F236472-EC0B-4E2C-86A4-E0B1B4F7257B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F236472-EC0B-4E2C-86A4-E0B1B4F7257B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
