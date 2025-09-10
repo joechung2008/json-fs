@@ -1,9 +1,11 @@
 ﻿open System
+open System.IO
 open Shared
 
 [<EntryPoint>]
 let main argv =
-    let input = Console.In.ReadToEnd()
+    use reader = new StreamReader(Console.OpenStandardInput())
+    let input = reader.ReadToEnd()
 
     match JSONParser.Parse(input) with
     | Ok token ->
